@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hyundai We Pay The Tax — Service Quote & Booking</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F6F8;
+    --surface:#FFFFFF;
+    --ink:#14181F;
+    --ink-soft:#5B6472;
+    --brand:#16324F;
+    --brand-2:#2C5C8A;
+    --savings:#0B8C6B;
+    --savings-glow:#E3F7F0;
+    --line:#E3E6EB;
+    --warn:#B3261E;
+    --warn-bg:#FBEAE9;
+    --radius:14px;
+    --shadow: 0 1px 2px rgba(20,24,31,0.04), 0 8px 24px rgba(20,24,31,0.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:transparent;
+    color:var(--ink);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding:0 8px 16px;
+  }
+
+  /* ---------- Sticky live summary bar ---------- */
+  .sticky-bar{
+    position:sticky; top:0; z-index:100;
+    max-width:980px; margin:0 auto; border-radius:14px 14px 0 0;
+    background:linear-gradient(135deg, var(--brand) 0%, #0F2438 100%);
+    color:#fff;
+    box-shadow:0 4px 16px rgba(0,0,0,0.18);
+    border-bottom:3px solid transparent;
+    border-image:linear-gradient(90deg,#FFC24B,#0B8C6B) 1;
+  }
+  .sticky-bar-inner{
+    max-width:980px; margin:0 auto;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 20px; gap:14px; flex-wrap:wrap;
+  }
+  .sticky-brand{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0; }
+  .sticky-badge{
+    font-size:10px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+    background:rgba(255,255,255,0.14); padding:4px 9px; border-radius:999px; white-space:nowrap;
+  }
+  .sticky-strike{ font-size:11.5px; color:rgba(255,255,255,0.62); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sticky-numbers{ display:flex; align-items:center; gap:20px; flex-shrink:0; }
+  .sticky-cell{ text-align:right; }
+  .sticky-label{
+    display:block; font-size:9px; letter-spacing:0.06em; text-transform:uppercase;
+    color:rgba(255,255,255,0.6); font-weight:600; line-height:1.4;
+  }
+  .sticky-value{
+    font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:21px;
+    font-variant-numeric:tabular-nums; line-height:1.05;
+  }
+  .sticky-cell.save .sticky-value{ color:#5FE3B8; }
+  .sticky-progress{ max-width:980px; margin:0 auto; padding:0 20px 9px; display:flex; align-items:center; gap:12px; }
+  .sp-track{ flex:1; height:3px; background:rgba(255,255,255,0.14); border-radius:3px; overflow:hidden; }
+  .sp-fill{ height:100%; width:0; background:#D9B770; border-radius:3px; transition:width 0.35s ease, background 0.35s ease; }
+  .sticky-progress.unlocked .sp-fill{ background:#5FE3B8; }
+  .sp-text{ font-size:11.5px; letter-spacing:0.02em; color:rgba(255,255,255,0.78); white-space:nowrap; }
+  .sp-text strong{ color:#fff; font-weight:600; }
+  .sticky-progress.unlocked .sp-text{ color:#5FE3B8; }
+  @media (max-width:640px){ .sticky-progress{ padding:0 14px 8px; gap:10px; } .sp-text{ font-size:10.5px; } }
+  .tb-note{ flex-basis:100%; font-size:12.5px; color:var(--ink-soft); border-top:1px solid rgba(0,0,0,0.06); padding-top:9px; margin-top:2px; }
+  .tb-note strong{ color:var(--ink); font-weight:600; }
+  .total-box.pending{ background:var(--bg); border-color:var(--line); }
+  .sticky-gift{
+    font-size:11px; font-weight:700; background:rgba(95,227,184,0.18); color:#5FE3B8;
+    padding:5px 9px; border-radius:999px; white-space:nowrap;
+  }
+  @media (max-width:640px){
+    .sticky-strike{ display:none; }
+    .sticky-bar-inner{ padding:8px 14px; gap:10px; }
+    .sticky-value{ font-size:17px; }
+    .sticky-numbers{ gap:14px; }
+  }
+  @media (max-width:400px){
+    .sticky-gift{ display:none !important; }
+  }
+  .widget{
+    max-width:980px;
+    margin:0 auto;
+    background:var(--surface);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    border:1px solid var(--line);
+  }
+  /* ---------- Header ---------- */
+  .header{
+    background:linear-gradient(135deg, var(--brand) 0%, var(--brand-2) 100%);
+    color:#fff;
+    padding:22px 24px 20px;
+    position:relative;
+  }
+  .header .badge{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    background:rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.3);
+    padding:4px 10px;
+    border-radius:999px;
+    font-size:11px;
+    letter-spacing:0.06em;
+    font-weight:600;
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .header .badge svg{width:12px;height:12px;flex-shrink:0;}
+  .header h1{
+    font-family:'Barlow Condensed', sans-serif;
+    font-weight:700;
+    font-size:34px;
+    line-height:1.05;
+    margin:0 0 4px;
+    letter-spacing:0.01em;
+  }
+  .header p{
+    margin:0;
+    font-size:13.5px;
+    color:rgba(255,255,255,0.85);
+    max-width:46ch;
+  }
+
+  /* ---------- Sections ---------- */
+  .section{ padding:22px 24px; border-bottom:1px solid var(--line); }
+  .section:last-child{ border-bottom:none; }
+  .eyebrow{
+    display:flex; align-items:center; gap:8px;
+    font-size:11px; font-weight:700; letter-spacing:0.08em;
+    color:var(--brand); text-transform:uppercase; margin-bottom:12px;
+  }
+  .eyebrow .num{
+    width:18px;height:18px; border-radius:50%;
+    background:var(--brand); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:10.5px; font-family:'Barlow Condensed',sans-serif; font-weight:600;
+  }
+
+  /* ---------- Segmented toggles ---------- */
+  .toggle-row{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px; }
+  .toggle-group{ flex:1; min-width:150px; }
+  .toggle-group label.group-label{
+    display:block; font-size:12px; font-weight:600; color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+  .segmented{
+    display:flex; background:var(--bg); border:1px solid var(--line);
+    border-radius:10px; padding:3px; gap:3px;
+  }
+  .segmented button{
+    flex:1; border:none; background:transparent; padding:9px 10px;
+    font-family:'Inter',sans-serif; font-size:13.5px; font-weight:600;
+    color:var(--ink-soft); border-radius:8px; cursor:pointer;
+    transition:background 0.15s ease, color 0.15s ease;
+  }
+  .segmented button.active{
+    background:var(--brand); color:#fff;
+    box-shadow:0 2px 6px rgba(22,50,79,0.25);
+  }
+  .segmented button:focus-visible{ outline:2px solid var(--brand-2); outline-offset:2px; }
+
+  /* ---------- Service checklist ---------- */
+  .svc-category{ margin-bottom:18px; }
+  .svc-category:last-child{ margin-bottom:0; }
+  .svc-cat-header{
+    display:flex; align-items:baseline; gap:10px; margin-bottom:4px;
+  }
+  .svc-cat-header h3{
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:17px;
+    color:var(--brand); margin:0; letter-spacing:0.01em;
+  }
+  .svc-cat-note{
+    font-size:11.5px; color:var(--ink-soft); margin:0 0 10px; font-style:italic;
+  }
+  .svc-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;
+  }
+  .svc-row{
+    display:flex; align-items:center; gap:10px;
+    padding:11px 12px; border:1px solid var(--line); border-radius:10px;
+    cursor:pointer; transition:border-color 0.15s ease, background 0.15s ease;
+  }
+  .svc-row:hover{ border-color:var(--brand-2); }
+  .svc-row.checked{ border-color:var(--brand); background:#F3F7FB; }
+  .svc-row input[type=checkbox]{
+    width:18px; height:18px; accent-color:var(--brand); cursor:pointer; flex-shrink:0;
+  }
+  .svc-row .svc-text{ flex:1; min-width:0; }
+  .svc-row .svc-name{ font-size:13.5px; font-weight:500; line-height:1.25; display:block; }
+  .svc-row .svc-sub{ font-size:11px; color:var(--ink-soft); display:block; margin-top:1px; }
+  .svc-row .svc-price{
+    font-family:'Barlow Condensed',sans-serif; font-weight:600; font-size:15.5px; color:var(--ink);
+    flex-shrink:0; white-space:nowrap;
+  }
+  .svc-row.gift{ border-color:var(--savings); background:var(--savings-glow); }
+  .svc-row.gift .svc-price{ color:var(--savings); font-size:12.5px; text-transform:uppercase; letter-spacing:0.03em; }
+  .svc-row.gift.locked{ border-color:var(--line); background:var(--bg); cursor:not-allowed; opacity:0.72; }
+  .svc-row.gift.locked input{ cursor:not-allowed; }
+  .svc-row.gift.locked .svc-price{ color:var(--ink-soft); }
+  .svc-empty{ font-size:13px; color:var(--ink-soft); padding:8px 2px; }
+
+  @media (max-width:820px){
+    .svc-grid{ grid-template-columns:repeat(2, 1fr); }
+  }
+  @media (max-width:560px){
+    .svc-grid{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- Form ---------- */
+  .field{ margin-bottom:14px; }
+  .field label{
+    display:block; font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:5px;
+  }
+  .field .req{ color:var(--warn); }
+  .field input[type=text], .field input[type=email], .field input[type=tel],
+  .field input[type=date], .field select, .field textarea{
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:9px;
+    font-family:'Inter',sans-serif; font-size:14px; color:var(--ink); background:#fff;
+  }
+  .field input:focus-visible, .field select:focus-visible, .field textarea:focus-visible{
+    outline:2px solid var(--brand-2); outline-offset:1px; border-color:var(--brand-2);
+  }
+  .field textarea{ resize:vertical; min-height:64px; }
+  .field-row{ display:flex; gap:12px; }
+  .field-row .field{ flex:1; }
+
+  /* ---------- CTA ---------- */
+  .cta-btn{
+    width:100%; background:var(--brand); color:#fff; border:none;
+    padding:15px 18px; border-radius:10px; font-family:'Inter',sans-serif;
+    font-size:15.5px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    transition:background 0.15s ease, transform 0.1s ease;
+  }
+  .cta-btn:hover{ background:#0F2438; }
+  .cta-btn:active{ transform:scale(0.99); }
+  .cta-btn svg{ width:17px; height:17px; }
+  .cta-secondary{
+    width:100%; background:transparent; color:var(--brand); border:1px solid var(--line);
+    padding:11px 16px; border-radius:10px; font-family:'Inter',sans-serif;
+    font-size:13.5px; font-weight:600; cursor:pointer; margin-top:8px;
+  }
+  .cta-secondary:hover{ background:var(--bg); }
+  .total-box{
+    display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+    background:var(--savings-glow); border:1px solid #BFE9DA; border-radius:10px;
+    padding:12px 14px; margin-bottom:14px;
+  }
+  .total-box .tb-label{ font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; color:var(--ink-soft); display:block; }
+  .total-box .tb-val{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:22px; font-variant-numeric:tabular-nums; }
+  .total-box .tb-save .tb-val{ color:var(--savings); }
+  .success{ display:none; text-align:center; padding:28px 12px; }
+  .success.show{ display:block; }
+  .success h3{ font-family:'Barlow Condensed',sans-serif; font-size:26px; color:var(--brand); margin:0 0 6px; }
+  .success p{ font-size:14px; color:var(--ink-soft); margin:0 0 14px; }
+  .cta-btn[disabled]{ opacity:0.6; cursor:wait; }
+  .error-msg{
+    background:var(--warn-bg); color:var(--warn); border:1px solid #F1C6C3;
+    padding:9px 12px; border-radius:8px; font-size:13px; margin-bottom:12px; display:none;
+  }
+  .error-msg.show{ display:block; }
+  .toast{
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--ink); color:#fff; padding:10px 18px; border-radius:999px;
+    font-size:13px; opacity:0; pointer-events:none; transition:opacity 0.2s ease, transform 0.2s ease;
+    z-index:20;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .fineprint{ font-size:11.5px; color:var(--ink-soft); line-height:1.5; margin-top:10px; }
+  .step-note{ font-size:12.5px; color:var(--ink-soft); margin:-4px 0 14px; line-height:1.45; }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ transition:none !important; }
+  }
+  @media (max-width:420px){
+    .header h1{ font-size:28px; }
+    .field-row{ flex-direction:column; gap:0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Always-visible live price summary -->
+<div class="sticky-bar" id="stickyBar">
+  <div class="sticky-bar-inner">
+    <div class="sticky-brand">
+      <span class="sticky-badge">We Pay The Tax</span>
+      <span class="sticky-strike" id="stickyStrike">Select services to see your price</span>
+    </div>
+    <div class="sticky-numbers">
+      <div class="sticky-cell">
+        <span class="sticky-label" id="stickyPayLabel">You Pay</span>
+        <span class="sticky-value" id="stickyYouPay">$0.00</span>
+      </div>
+      <div class="sticky-cell save">
+        <span class="sticky-label">You Save</span>
+        <span class="sticky-value" id="stickyYouSave">$0.00</span>
+      </div>
+      <div class="sticky-gift" id="stickyGift" style="display:none;">🎁 Gift</div>
+    </div>
+  </div>
+  <div class="sticky-progress" id="stickyProgress">
+    <div class="sp-track"><div class="sp-fill" id="spFill"></div></div>
+    <span class="sp-text" id="spText"></span>
+  </div>
+</div>
+
+<div class="widget">
+
+  <!-- Header -->
+  <div class="header">
+    <span class="badge">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+      Hyundai · We Pay The Tax Promotion
+    </span>
+    <h1>Build Your Service Package</h1>
+    <p>Spend $250 or more on the services below and we cover the Ontario HST, so the price you see is the price you pay.</p>
+  </div>
+
+  <!-- Step 1: Vehicle + Store -->
+  <div class="section">
+    <div class="eyebrow"><span class="num">1</span> Your vehicle</div>
+    <div class="toggle-row">
+      <div class="toggle-group">
+        <label class="group-label">Vehicle type</label>
+        <div class="segmented" id="vehicleToggle">
+          <button type="button" data-val="ICE" class="active">Gas / Hybrid</button>
+          <button type="button" data-val="EV">Electric (EV)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Services -->
+  <div class="section">
+    <div class="eyebrow"><span class="num">2</span> Choose your services</div>
+    <div class="svc-list" id="svcList"></div>
+  </div>
+
+  <!-- Step 3: Appointment -->
+  <div class="section">
+    <div class="eyebrow"><span class="num">3</span> Request your appointment</div>
+    <p class="step-note">Pick a date and time that works for you — this is a request, and our team will call or email to confirm your actual appointment slot.</p>
+
+    <div class="error-msg" id="errorMsg"></div>
+
+    <form id="requestForm" action="https://REPLACE-WITH-YOUR-FORM-ENDPOINT" method="POST">
+
+      <div class="field-row">
+        <div class="field">
+          <label for="custName">Full name <span class="req">*</span></label>
+          <input type="text" id="custName" name="name" placeholder="Jordan Smith" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="custPhone">Phone</label>
+          <input type="tel" id="custPhone" name="phone" placeholder="(555) 555-1234" autocomplete="tel">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="custEmail">Email <span class="req">*</span></label>
+        <input type="email" id="custEmail" name="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+
+      <div class="field">
+        <label for="custVehicle">Vehicle make &amp; model (optional)</label>
+        <input type="text" id="custVehicle" name="vehicle" placeholder="e.g. 2022 Hyundai Tucson">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="apptDate">Requested date <span class="req">*</span></label>
+          <input type="date" id="apptDate" name="appointment_date">
+        </div>
+        <div class="field">
+          <label for="apptTime">Requested time</label>
+          <select id="apptTime" name="appointment_time">
+            <option value="Morning (8am – 11am)">Morning (8am – 11am)</option>
+            <option value="Midday (11am – 2pm)">Midday (11am – 2pm)</option>
+            <option value="Afternoon (2pm – 5pm)">Afternoon (2pm – 5pm)</option>
+            <option value="No preference">No preference</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="custNotes">Notes (optional)</label>
+        <textarea id="custNotes" name="notes" placeholder="Anything else we should know?"></textarea>
+      </div>
+
+      <!-- Hidden fields populated from the calculator right before submit -->
+      <input type="hidden" name="vehicle_type" id="hiddenVehicleType">
+      <input type="hidden" name="store" id="hiddenStore">
+      <input type="hidden" name="services_requested" id="hiddenServices">
+      <input type="hidden" name="regular_price" id="hiddenRegular">
+      <input type="hidden" name="hst_savings" id="hiddenSavings">
+      <input type="hidden" name="you_pay" id="hiddenYouPay">
+      <input type="hidden" name="request_summary" id="hiddenSummary">
+      <input type="hidden" name="_subject" value="New Hyundai Service Package Request — We Pay The Tax">
+
+      <div class="total-box" id="totalBox">
+        <div><span class="tb-label" id="totalPayLabel">You Pay (tax-free)</span><span class="tb-val" id="totalYouPay">$0.00</span></div>
+        <div class="tb-save" style="text-align:right;"><span class="tb-label">You Save</span><span class="tb-val" id="totalYouSave">$0.00</span></div>
+        <div class="tb-note" id="totalNote"></div>
+      </div>
+
+      <button class="cta-btn" id="sendBtn" type="submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7Z"/></svg>
+        Send My Request
+      </button>
+      <button class="cta-secondary" id="copyBtn" type="button">Copy request details instead</button>
+    </form>
+
+    <div class="success" id="successBox">
+      <h3>Request sent. Thank you!</h3>
+      <p>Our service team will call or email you to confirm your appointment.</p>
+      <button class="cta-secondary" id="againBtn" type="button" style="max-width:260px;">Start another request</button>
+    </div>
+
+    <p class="fineprint">"Send My Request" submits directly to our service team — no email app needed. Your requested date and time are not confirmed until we follow up. Prices reflect current service pricing and are confirmed at your appointment. Ontario HST (13%) is covered by us on the services listed above when your selected services total $250 or more before tax.</p>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ===================== CONFIGURATION =====================
+  // The actual send destination is the <form action="..."> attribute in the HTML above
+  // (search for REPLACE-WITH-YOUR-FORM-ENDPOINT) — set that to the endpoint your website
+  // provider gives you for form submissions. This script just validates and fills the
+  // hidden fields; your provider's form handler takes it from there.
+
+  // Pricing source: "Hyundai" tab, Kia Recommended Services Menu (August 2026).
+  // vehicle: "ICE" (gas/hybrid) | "BOTH"     store: "Hyundai" (omit if available at both stores)
+  // sub: optional small note shown under the service name in the checklist.
+  var CATEGORIES = [
+    {
+      name: "Oil Change, Tires & Alignment",
+      services: [
+        { id:"oil",          name:"Oil Change (Synthetic)",      price:149.95, vehicle:"ICE"  },
+        { id:"swap",         name:"Tire Swap / Rotation",        price: 69.95, vehicle:"BOTH" },
+        { id:"balance",      name:"Tire Balance (4-Wheel)",      price: 89.95, vehicle:"BOTH" },
+        { id:"storage",      name:"Tire Storage (One Season)",   price: 69.95, vehicle:"BOTH" },
+        { id:"alignment",    name:"Wheel Alignment (4-Wheel)",   price:169.95, vehicle:"BOTH" },
+        { id:"aligncheck",   name:"Alignment Check",             price: 49.95, vehicle:"BOTH" },
+        { id:"mountbalance", name:"Mount & Balance (4 Tires)",   price:169.95, vehicle:"BOTH" }
+      ]
+    },
+    {
+      name: "Fluids",
+      services: [
+        { id:"brakefluid",   name:"Brake Fluid Replacement",     price:189.95, vehicle:"BOTH", sub:"$129.95 when booked with a Tire Swap" },
+        { id:"coolant",      name:"Engine Coolant Service",      price:199.95, vehicle:"ICE"  },
+        { id:"hybridcoolant",name:"Hybrid Inverter Coolant Service", price:249.95, vehicle:"ICE", sub:"Hybrid models" }
+      ]
+    },
+    {
+      name: "Transmission & Drivetrain",
+      note: "Pricing is for conventional automatic transmissions — dual-clutch/CVT may vary and will be confirmed at booking.",
+      services: [
+        { id:"autotrans",    name:"Automatic Transmission Service", price:399.95, vehicle:"ICE" },
+        { id:"mantrans",     name:"Manual Transmission Service",    price:149.95, vehicle:"ICE" },
+        { id:"transfercase", name:"Transfer Case Service",          price:149.95, vehicle:"ICE", sub:"AWD models" },
+        { id:"reardiff",     name:"Rear Differential Service",      price:149.95, vehicle:"ICE", sub:"AWD models" },
+        { id:"driveline",    name:"Driveline Bundle",               price:599.95, vehicle:"ICE", sub:"ATF + transfer case + rear diff, AWD" },
+        { id:"hybridbelt",   name:"Hybrid Gear Belt",               price:299.95, vehicle:"ICE", sub:"Hybrid models" }
+      ]
+    },
+    {
+      name: "Engine & Ignition",
+      note: "Not sure which spark plug service fits your engine? We'll confirm the right one when you book.",
+      services: [
+        { id:"plugs4t",      name:"Spark Plugs — 4cyl (Turbo)",     price:299.95, vehicle:"ICE" },
+        { id:"plugs4n",      name:"Spark Plugs — 4cyl (Non-Turbo)", price:299.95, vehicle:"ICE" },
+        { id:"plugsv6",      name:"Spark Plugs — V6 Engine",        price:499.95, vehicle:"ICE" },
+        { id:"fuelservice",  name:"Major Fuel Service",              price:199.95, vehicle:"ICE" }
+      ]
+    },
+    {
+      name: "Inspection, Care & More",
+      services: [
+        { id:"undercoating", name:"Undercoating (Dripless Oil)", price:199.95, vehicle:"ICE" },
+        { id:"battery",      name:"Battery Service",             price: 49.95, vehicle:"BOTH" },
+        { id:"brakeservice", name:"Brake Service (per axle)",    price:169.95, vehicle:"BOTH" },
+        { id:"hvac",         name:"HVAC Cleaning Service",       price:249.95, vehicle:"BOTH" },
+        { id:"mvsafety",     name:"Motor Vehicle Safety Inspection", price:299.95, vehicle:"BOTH" },
+        { id:"safesound",    name:"Safe & Sound Inspection",     price:139.95, vehicle:"BOTH", sub:"Like a provincial safety, no cert issued" },
+        { id:"gift",         name:"Free Gift",                   price: 22.00, vehicle:"BOTH", store:"Hyundai", isGift:true }
+      ]
+    }
+  ];
+  // Flat lookup used by pricing/summary logic
+  var SERVICES = CATEGORIES.reduce(function(acc, cat){ return acc.concat(cat.services); }, []);
+  var HST_RATE = 0.13;
+  var MIN_SPEND = 250;   // pre-tax service total needed to unlock the promotion
+  // Where form submissions go. Paste your form endpoint here (e.g. Formspree, Basin,
+  // your website provider's form handler). Leave as-is and the Send button will show an error.
+  var FORM_ENDPOINT = "https://REPLACE-WITH-YOUR-FORM-ENDPOINT";
+  // ===========================================================
+
+  var STORE = "Hyundai";
+  var state = { vehicle:"ICE", store:STORE, selected:{} };
+
+  var svcListEl = document.getElementById("svcList");
+  var vehicleToggle = document.getElementById("vehicleToggle");
+
+  function fmt(n){
+    return "$" + n.toLocaleString("en-CA", {minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  function isApplicable(s){
+    var vehicleOk = s.vehicle === "BOTH" || s.vehicle === state.vehicle;
+    var storeOk = !s.store || s.store === state.store;
+    return vehicleOk && storeOk;
+  }
+
+  function applicableServices(){
+    return SERVICES.filter(isApplicable);
+  }
+
+  function renderServiceList(){
+    var list = applicableServices();
+    // Drop selections that are no longer valid for this vehicle/store combo
+    Object.keys(state.selected).forEach(function(id){
+      if (!list.some(function(s){ return s.id === id; })) delete state.selected[id];
+    });
+
+    // The free gift only unlocks once paid services reach the minimum spend
+    var paidSubtotal = list.reduce(function(sum,s){ return sum + (!s.isGift && state.selected[s.id] ? s.price : 0); }, 0);
+    var giftUnlocked = paidSubtotal >= MIN_SPEND;
+    list.forEach(function(s){ if (s.isGift && !giftUnlocked) delete state.selected[s.id]; });
+
+    svcListEl.innerHTML = "";
+    var anyVisible = false;
+
+    CATEGORIES.forEach(function(cat){
+      var catServices = cat.services.filter(isApplicable);
+      if (catServices.length === 0) return;
+      anyVisible = true;
+
+      var block = document.createElement("div");
+      block.className = "svc-category";
+
+      var header = document.createElement("div");
+      header.className = "svc-cat-header";
+      header.innerHTML = "<h3>" + cat.name + "</h3>";
+      block.appendChild(header);
+
+      if (cat.note){
+        var note = document.createElement("p");
+        note.className = "svc-cat-note";
+        note.textContent = cat.note;
+        block.appendChild(note);
+      }
+
+      var grid = document.createElement("div");
+      grid.className = "svc-grid";
+
+      catServices.forEach(function(s){
+        var row = document.createElement("label");
+        var locked = s.isGift && !giftUnlocked;
+        row.className = "svc-row" + (s.isGift ? " gift" : "") + (locked ? " locked" : "") + (state.selected[s.id] ? " checked" : "");
+        var sub = locked ? "Unlocks with " + fmt(MIN_SPEND) + " or more in services" : s.sub;
+        row.innerHTML =
+          '<input type="checkbox" data-id="' + s.id + '" ' + (state.selected[s.id] ? "checked" : "") + (locked ? " disabled" : "") + '>' +
+          '<span class="svc-text">' +
+            '<span class="svc-name">' + s.name + (s.isGift ? "" : "") + '</span>' +
+            (sub ? '<span class="svc-sub">' + sub + '</span>' : '') +
+          '</span>' +
+          '<span class="svc-price">' + (s.isGift ? "FREE" : fmt(s.price)) + '</span>';
+        grid.appendChild(row);
+      });
+
+      block.appendChild(grid);
+      svcListEl.appendChild(block);
+    });
+
+    if (!anyVisible){
+      svcListEl.innerHTML = '<div class="svc-empty">No services available for this combination.</div>';
+      return;
+    }
+
+    svcListEl.querySelectorAll('input[type=checkbox]').forEach(function(cb){
+      cb.addEventListener("change", function(){
+        var id = cb.getAttribute("data-id");
+        if (cb.checked) state.selected[id] = true; else delete state.selected[id];
+        renderServiceList();
+        updateReadout();
+      });
+    });
+  }
+
+  function selectedServices(){
+    return applicableServices().filter(function(s){ return state.selected[s.id]; });
+  }
+
+  function pricing(){
+    var chosen = selectedServices();
+    var paid = chosen.filter(function(s){ return !s.isGift; });
+    var subtotal = paid.reduce(function(sum,s){ return sum + s.price; }, 0);
+    var hst = subtotal * HST_RATE;
+    var qualifies = subtotal >= MIN_SPEND;
+    return {
+      chosen:chosen, paid:paid, giftIncluded:chosen.some(function(s){ return s.isGift; }),
+      subtotal:subtotal, hst:hst, qualifies:qualifies,
+      youPay: qualifies ? subtotal : subtotal + hst,
+      youSave: qualifies ? hst : 0,
+      remaining: Math.max(0, MIN_SPEND - subtotal)
+    };
+  }
+
+  function updateReadout(){
+    var P = pricing();
+    var pct = Math.min(100, (P.subtotal / MIN_SPEND) * 100);
+    var bar = document.getElementById("stickyProgress");
+    bar.classList.toggle("unlocked", P.qualifies);
+    document.getElementById("spFill").style.width = pct + "%";
+    var spText, note;
+    if (P.subtotal === 0){
+      spText = "Spend <strong>" + fmt(MIN_SPEND) + "</strong> and we pay the tax";
+      note = "Select <strong>" + fmt(MIN_SPEND) + "</strong> or more in services and we'll cover the 13% HST.";
+    } else if (!P.qualifies){
+      spText = "Almost there. <strong>" + fmt(P.remaining) + "</strong> more and we pay the tax";
+      note = "You're almost there. Add <strong>" + fmt(P.remaining) + "</strong> more in services and we'll cover the HST.";
+    } else {
+      spText = "We Pay The Tax unlocked";
+      note = "Your package qualifies. We're covering the <strong>13% HST</strong> on your services.";
+    }
+    document.getElementById("spText").innerHTML = spText;
+    document.getElementById("totalNote").innerHTML = note;
+    document.getElementById("totalBox").classList.toggle("pending", !P.qualifies);
+    var payLabel = P.qualifies ? "You Pay (tax-free)" : "You Pay (incl. HST)";
+    document.getElementById("totalPayLabel").textContent = payLabel;
+    document.getElementById("stickyPayLabel").textContent = P.qualifies ? "You Pay" : "Incl. HST";
+    document.getElementById("stickyYouPay").textContent = fmt(P.youPay);
+    document.getElementById("stickyYouSave").textContent = fmt(P.youSave);
+    document.getElementById("totalYouPay").textContent = fmt(P.youPay);
+    document.getElementById("totalYouSave").textContent = fmt(P.youSave);
+    document.getElementById("stickyStrike").textContent = P.qualifies
+      ? "Regular incl. 13% HST: " + fmt(P.subtotal + P.hst) + ", you pay tax-free"
+      : "Tax-free service on packages of " + fmt(MIN_SPEND) + " or more";
+    document.getElementById("stickyGift").style.display = P.giftIncluded ? "inline-block" : "none";
+  }
+
+
+  function setActive(container, val){
+    container.querySelectorAll("button").forEach(function(btn){
+      btn.classList.toggle("active", btn.getAttribute("data-val") === val);
+    });
+  }
+
+  vehicleToggle.addEventListener("click", function(e){
+    var btn = e.target.closest("button");
+    if (!btn) return;
+    state.vehicle = btn.getAttribute("data-val");
+    setActive(vehicleToggle, state.vehicle);
+    renderServiceList();
+    updateReadout();
+  });
+
+
+  // ---- date min = today ----
+  var apptDateEl = document.getElementById("apptDate");
+  var today = new Date();
+  function pad(n){ return (n<10?"0":"")+n; }
+  apptDateEl.min = today.getFullYear()+"-"+pad(today.getMonth()+1)+"-"+pad(today.getDate());
+
+  // ---- build request summary text ----
+  function buildSummary(){
+    var chosen = selectedServices();
+    var paid = chosen.filter(function(s){ return !s.isGift; });
+    var giftIncluded = chosen.some(function(s){ return s.isGift; });
+    var subtotal = paid.reduce(function(sum,s){ return sum + s.price; }, 0);
+    var hst = subtotal * HST_RATE;
+
+    var lines = [];
+    lines.push("SERVICE PACKAGE REQUEST — WE PAY THE TAX PROMOTION");
+    lines.push("");
+    lines.push("Vehicle Type: " + (state.vehicle === "ICE" ? "Gas / Hybrid" : "Electric (EV)"));
+    lines.push("Store: " + state.store);
+    lines.push("");
+    lines.push("Requested Services:");
+    paid.forEach(function(s){ lines.push("  - " + s.name + " — " + fmt(s.price)); });
+    if (giftIncluded) lines.push("  - Free Gift — $22.00 value, no charge");
+    lines.push("");
+    lines.push("Regular Price (services): " + fmt(subtotal));
+    if (subtotal >= MIN_SPEND){
+      lines.push("Ontario HST (13%) — covered by dealership: " + fmt(hst));
+      lines.push("YOU PAY: " + fmt(subtotal));
+      lines.push("YOU SAVE: " + fmt(hst));
+    } else {
+      lines.push("Ontario HST (13%): " + fmt(hst));
+      lines.push("YOU PAY: " + fmt(subtotal + hst));
+      lines.push("We Pay The Tax not applied (" + fmt(MIN_SPEND - subtotal) + " below the " + fmt(MIN_SPEND) + " minimum)");
+    }
+    lines.push("");
+    lines.push("Requested Appointment Date: " + (apptDateEl.value || "(not specified)"));
+    lines.push("Preferred Time: " + document.getElementById("apptTime").value);
+    var notes = document.getElementById("custNotes").value.trim();
+    if (notes) { lines.push(""); lines.push("Notes: " + notes); }
+    lines.push("");
+    lines.push("Customer Name: " + document.getElementById("custName").value.trim());
+    lines.push("Email: " + document.getElementById("custEmail").value.trim());
+    var phone = document.getElementById("custPhone").value.trim();
+    if (phone) lines.push("Phone: " + phone);
+    var vehicleDesc = document.getElementById("custVehicle").value.trim();
+    if (vehicleDesc) lines.push("Vehicle: " + vehicleDesc);
+    return lines.join("\n");
+  }
+
+  function showError(msg){
+    var el = document.getElementById("errorMsg");
+    el.textContent = msg;
+    el.classList.add("show");
+  }
+  function clearError(){
+    document.getElementById("errorMsg").classList.remove("show");
+  }
+
+  function validate(){
+    var chosen = selectedServices();
+    if (chosen.length === 0){ showError("Please select at least one service."); return false; }
+    if (!document.getElementById("custName").value.trim()){ showError("Please enter your name."); return false; }
+    var email = document.getElementById("custEmail").value.trim();
+    if (!email || email.indexOf("@") === -1){ showError("Please enter a valid email address."); return false; }
+    if (!apptDateEl.value){ showError("Please choose a requested date."); return false; }
+    clearError();
+    return true;
+  }
+
+  function showToast(msg){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.classList.add("show");
+    setTimeout(function(){ t.classList.remove("show"); }, 2200);
+  }
+
+  // Populate the hidden fields with a snapshot of the calculator right before submit,
+  // so whatever notification your form endpoint sends includes the full breakdown.
+  function populateHiddenFields(){
+    var chosen = selectedServices();
+    var paid = chosen.filter(function(s){ return !s.isGift; });
+    var giftIncluded = chosen.some(function(s){ return s.isGift; });
+    var subtotal = paid.reduce(function(sum,s){ return sum + s.price; }, 0);
+    var hst = subtotal * HST_RATE;
+
+    var serviceNames = paid.map(function(s){ return s.name; });
+    if (giftIncluded) serviceNames.push("Free Gift ($22 value, no charge)");
+
+    document.getElementById("hiddenVehicleType").value = state.vehicle === "ICE" ? "Gas / Hybrid" : "Electric (EV)";
+    document.getElementById("hiddenStore").value = state.store;
+    document.getElementById("hiddenServices").value = serviceNames.join(", ");
+    document.getElementById("hiddenRegular").value = fmt(subtotal);
+    var q = subtotal >= MIN_SPEND;
+    document.getElementById("hiddenSavings").value = q ? fmt(hst) : "$0.00 (below " + fmt(MIN_SPEND) + " minimum)";
+    document.getElementById("hiddenYouPay").value = fmt(q ? subtotal : subtotal + hst);
+    document.getElementById("hiddenSummary").value = buildSummary();
+  }
+
+  var requestForm = document.getElementById("requestForm");
+
+  var sendBtn = document.getElementById("sendBtn");
+  var sendBtnHTML = sendBtn.innerHTML;
+  requestForm.setAttribute("action", FORM_ENDPOINT);
+
+  requestForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    if (!validate()) return;
+    if (FORM_ENDPOINT.indexOf("REPLACE-WITH") !== -1){
+      showError("This form isn't connected yet. Please use \"Copy request details instead\" or call us.");
+      return;
+    }
+    populateHiddenFields();
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Sending…";
+    fetch(FORM_ENDPOINT, { method:"POST", body:new FormData(requestForm), headers:{ "Accept":"application/json" } })
+      .then(function(r){
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        requestForm.style.display = "none";
+        document.getElementById("successBox").classList.add("show");
+        notifyParent("submitted");
+      })
+      .catch(function(){
+        showError("Sorry, we couldn't send your request. Please try again, or use \"Copy request details instead\".");
+      })
+      .then(function(){
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = sendBtnHTML;
+        postHeight();
+      });
+  });
+
+  document.getElementById("againBtn").addEventListener("click", function(){
+    requestForm.reset();
+    state.selected = {};
+    renderServiceList();
+    updateReadout();
+    requestForm.style.display = "";
+    document.getElementById("successBox").classList.remove("show");
+    postHeight();
+  });
+
+  // ---- iframe auto-height: tell the host page how tall we are ----
+  function notifyParent(type, extra){
+    if (window.parent === window) return;
+    var msg = { source:"wptt-hyundai", type:type };
+    if (extra) for (var k in extra) msg[k] = extra[k];
+    window.parent.postMessage(msg, "*");
+  }
+  var lastH = 0;
+  function postHeight(){
+    var h = Math.ceil(document.documentElement.getBoundingClientRect().height);
+    if (h !== lastH){ lastH = h; notifyParent("resize", { height:h }); }
+  }
+  if (window.ResizeObserver) new ResizeObserver(postHeight).observe(document.body);
+  window.addEventListener("load", postHeight);
+  setInterval(postHeight, 1000);
+
+  document.getElementById("copyBtn").addEventListener("click", function(){
+    if (!validate()) return;
+    var text = buildSummary();
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(function(){
+        showToast("Request details copied — paste into an email to us.");
+      }, function(){ legacyCopy(text); });
+    } else {
+      legacyCopy(text);
+    }
+  });
+
+  function legacyCopy(text){
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    var ok = false; try { ok = document.execCommand("copy"); } catch(e){}
+    document.body.removeChild(ta);
+    showToast(ok ? "Request details copied — paste into an email to us." : "Could not copy automatically — please select and copy manually.");
+  }
+
+  renderServiceList();
+  updateReadout();
+})();
+</script>
+
+</body>
+</html>
