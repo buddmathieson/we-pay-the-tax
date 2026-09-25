@@ -358,7 +358,7 @@
 
     <div class="error-msg" id="errorMsg"></div>
 
-    <form id="requestForm" action="https://REPLACE-WITH-YOUR-FORM-ENDPOINT" method="POST">
+    <form id="requestForm" action="https://formsubmit.co/" method="POST">
 
       <div class="field-row">
         <div class="field">
@@ -410,7 +410,6 @@
       <input type="hidden" name="hst_savings" id="hiddenSavings">
       <input type="hidden" name="you_pay" id="hiddenYouPay">
       <input type="hidden" name="request_summary" id="hiddenSummary">
-      <input type="hidden" name="_subject" value="New Hyundai Service Package Request — We Pay The Tax">
 
       <div class="total-box" id="totalBox">
         <div><span class="tb-label" id="totalPayLabel">You Pay (tax-free)</span><span class="tb-val" id="totalYouPay">$0.00</span></div>
@@ -442,11 +441,28 @@
 (function(){
   "use strict";
 
+  // ===================== EMAIL DELIVERY (FormSubmit) =====================
+  // "Send My Request" posts the request to FormSubmit (https://formsubmit.co), which
+  // emails it on. No account needed; each recipient address must click a one-time
+  // "Activate Form" link that FormSubmit emails them on the first submission.
+  //
+  //   TO GO LIVE: change TEST_MODE below from true to false. Nothing else needs editing.
+  //
+  var TEST_MODE = true;   // true = send ONLY to TEST_RECIPIENT (no cc). false = send to live recipients.
+
+  var TEST_RECIPIENT = "budd@ovag.ca";
+  var TEST_CC        = [];                                   // no cc while testing
+
+  var LIVE_RECIPIENT = "tiffany.cameron@hyundaipembroke.ca";
+  var LIVE_CC        = ["tstubinsky@ovag.ca"];               // cc'd on every live request
+
+  // Built from the settings above; do not edit.
+  var FORM_ENDPOINT = "https://formsubmit.co/ajax/" + (TEST_MODE ? TEST_RECIPIENT : LIVE_RECIPIENT);
+  var FORM_CC       = (TEST_MODE ? TEST_CC : LIVE_CC).join(",");
+  // ========================================================================
+
   // ===================== CONFIGURATION =====================
-  // The actual send destination is the <form action="..."> attribute in the HTML above
-  // (search for REPLACE-WITH-YOUR-FORM-ENDPOINT) — set that to the endpoint your website
-  // provider gives you for form submissions. This script just validates and fills the
-  // hidden fields; your provider's form handler takes it from there.
+  // Where requests are emailed is set in the EMAIL DELIVERY block at the top of this script.
 
   // Pricing source: "Hyundai" tab, Kia Recommended Services Menu (August 2026).
   // vehicle: "ICE" (gas/hybrid) | "BOTH"     store: "Hyundai" (omit if available at both stores)
@@ -511,9 +527,6 @@
   var SERVICES = CATEGORIES.reduce(function(acc, cat){ return acc.concat(cat.services); }, []);
   var HST_RATE = 0.13;
   var MIN_SPEND = 250;   // pre-tax service total needed to unlock the promotion
-  // Where form submissions go. Paste your form endpoint here (e.g. Formspree, Basin,
-  // your website provider's form handler). Leave as-is and the Send button will show an error.
-  var FORM_ENDPOINT = "https://REPLACE-WITH-YOUR-FORM-ENDPOINT";
   // ===========================================================
 
   var STORE = "Hyundai";
@@ -775,31 +788,94 @@
     document.getElementById("hiddenSummary").value = buildSummary();
   }
 
+  // Build the FormSubmit payload: readable field names (they become the rows of the
+  // "table" email template) plus FormSubmit's special underscore fields.
+  function buildPayload(){
+    var chosen = selectedServices();
+    var paid = chosen.filter(function(s){ return !s.isGift; });
+    var giftIncluded = chosen.some(function(s){ return s.isGift; });
+    var giftOffered = SERVICES.some(function(s){ return s.isGift && (!s.store || s.store === state.store); });
+    var subtotal = paid.reduce(function(sum,s){ return sum + s.price; }, 0);
+    var hst = subtotal * HST_RATE;
+    var q = subtotal >= MIN_SPEND;
+    var val = function(id){ return document.getElementById(id).value.trim(); };
+    var name = val("custName"), email = val("custEmail");
+
+    var p = {};
+    p["_subject"]  = (TEST_MODE ? "[TEST] " : "") + "We Pay The Tax - " + STORE + " service request - " + name;
+    if (FORM_CC) p["_cc"] = FORM_CC;
+    p["_template"] = "table";
+    p["_captcha"]  = "false";
+    if (email) p["_replyto"] = email;
+    p["_url"]      = location.href;
+
+    if (TEST_MODE) p["Test Mode"] = "TEST SUBMISSION - sent only to " + TEST_RECIPIENT;
+    p["Dealership"]      = STORE;
+    p["Customer Name"]   = name;
+    p["Customer Email"]  = email;
+    p["Customer Phone"]  = val("custPhone") || "(not provided)";
+    p["Vehicle"]         = val("custVehicle") || "(not provided)";
+    p["Vehicle Type"]    = state.vehicle === "ICE" ? "Gas / Hybrid" : "Electric (EV)";
+    p["Requested Date"]  = apptDateEl.value || "(not specified)";
+    p["Requested Time"]  = document.getElementById("apptTime").value;
+    p["Services Requested"] = paid.map(function(s){ return s.name + " - " + fmt(s.price); }).join("\n") || "(none)";
+    p["Number of Paid Services"] = String(paid.length);
+    p["Services Subtotal (before tax)"] = fmt(subtotal);
+    p["$250 We Pay The Tax Promotion"] = q
+      ? "YES - applied (subtotal is " + fmt(MIN_SPEND) + " or more, dealership covers the HST)"
+      : "NO - not applied (" + fmt(MIN_SPEND - subtotal) + " below the " + fmt(MIN_SPEND) + " minimum)";
+    p["Ontario HST (13%)"] = fmt(hst) + (q ? " - covered by dealership" : " - paid by customer");
+    p["Customer Pays"]     = fmt(q ? subtotal : subtotal + hst) + (q ? " (tax-free)" : " (incl. HST)");
+    p["Customer Saves"]    = fmt(q ? hst : 0);
+    if (giftOffered){
+      p["Free Gift"] = giftIncluded ? "YES - Free Gift included ($22.00 value, no charge)"
+                     : (q ? "No - customer did not select it" : "No - not unlocked (below " + fmt(MIN_SPEND) + ")");
+    }
+    p["Notes"] = val("custNotes") || "(none)";
+    p["Full Request Summary"] = buildSummary();
+    return p;
+  }
+
   var requestForm = document.getElementById("requestForm");
 
   var sendBtn = document.getElementById("sendBtn");
   var sendBtnHTML = sendBtn.innerHTML;
-  requestForm.setAttribute("action", FORM_ENDPOINT);
+  requestForm.setAttribute("action", FORM_ENDPOINT.replace("/ajax/", "/"));
 
   requestForm.addEventListener("submit", function(e){
     e.preventDefault();
     if (!validate()) return;
-    if (FORM_ENDPOINT.indexOf("REPLACE-WITH") !== -1){
-      showError("This form isn't connected yet. Please use \"Copy request details instead\" or call us.");
-      return;
-    }
     populateHiddenFields();
     sendBtn.disabled = true;
     sendBtn.textContent = "Sending…";
-    fetch(FORM_ENDPOINT, { method:"POST", body:new FormData(requestForm), headers:{ "Accept":"application/json" } })
+    fetch(FORM_ENDPOINT, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json", "Accept":"application/json" },
+      body:JSON.stringify(buildPayload())
+    })
       .then(function(r){
-        if (!r.ok) throw new Error("HTTP " + r.status);
+        // FormSubmit answers {"success":"true", ...} when the email is sent, and
+        // {"success":"false","message":"..."} otherwise (e.g. form not activated yet),
+        // sometimes with HTTP 200, so success is judged from the JSON, not just r.ok.
+        return r.json().catch(function(){ return {}; }).then(function(data){
+          window.__wpttLastResponse = { status:r.status, data:data };
+          if (TEST_MODE && window.console) console.log("[WPTT] FormSubmit response", r.status, data);
+          if (!r.ok || String(data.success) !== "true"){
+            var err = new Error(data.message || ("HTTP " + r.status));
+            err.fsMessage = data.message;
+            throw err;
+          }
+        });
+      })
+      .then(function(){
         requestForm.style.display = "none";
         document.getElementById("successBox").classList.add("show");
         notifyParent("submitted");
       })
-      .catch(function(){
-        showError("Sorry, we couldn't send your request. Please try again, or use \"Copy request details instead\".");
+      .catch(function(err){
+        var msg = "Sorry, we couldn't send your request. Please try again, or use \"Copy request details instead\".";
+        if (TEST_MODE && err && err.message) msg += " [Test mode - FormSubmit said: " + err.message + "]";
+        showError(msg);
       })
       .then(function(){
         sendBtn.disabled = false;
