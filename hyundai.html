@@ -358,7 +358,7 @@
 
     <div class="error-msg" id="errorMsg"></div>
 
-    <form id="requestForm" action="https://formsubmit.co/" method="POST">
+    <form id="requestForm" method="POST">
 
       <div class="field-row">
         <div class="field">
@@ -402,6 +402,12 @@
         <textarea id="custNotes" name="notes" placeholder="Anything else we should know?"></textarea>
       </div>
 
+      <!-- Spam trap: real visitors never see or fill this field -->
+      <div aria-hidden="true" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;">
+        <label for="wpttWebsite">Website</label>
+        <input type="text" id="wpttWebsite" name="website" tabindex="-1" autocomplete="off">
+      </div>
+
       <!-- Hidden fields populated from the calculator right before submit -->
       <input type="hidden" name="vehicle_type" id="hiddenVehicleType">
       <input type="hidden" name="store" id="hiddenStore">
@@ -441,28 +447,16 @@
 (function(){
   "use strict";
 
-  // ===================== EMAIL DELIVERY (FormSubmit) =====================
-  // "Send My Request" posts the request to FormSubmit (https://formsubmit.co), which
-  // emails it on. No account needed; each recipient address must click a one-time
-  // "Activate Form" link that FormSubmit emails them on the first submission.
-  //
-  //   TO GO LIVE: change TEST_MODE below from true to false. Nothing else needs editing.
-  //
-  var TEST_MODE = true;   // true = send ONLY to TEST_RECIPIENT (no cc). false = send to live recipients.
-
-  var TEST_RECIPIENT = "budd@ovag.ca";
-  var TEST_CC        = [];                                   // no cc while testing
-
-  var LIVE_RECIPIENT = "tiffany.cameron@hyundaipembroke.ca";
-  var LIVE_CC        = ["tstubinsky@ovag.ca"];               // cc'd on every live request
-
-  // Built from the settings above; do not edit.
-  var FORM_ENDPOINT = "https://formsubmit.co/ajax/" + (TEST_MODE ? TEST_RECIPIENT : LIVE_RECIPIENT);
-  var FORM_CC       = (TEST_MODE ? TEST_CC : LIVE_CC).join(",");
-  // ========================================================================
+  // ===================== EMAIL DELIVERY =====================
+  // "Send My Request" posts the request as JSON to our Supabase Edge Function
+  // (wptt-request, project OVAG AI), which emails it via Resend from our verified ovag.ca domain.
+  // Recipients and TEST MODE are controlled in the Supabase function, not in this page.
+  var REQUEST_ENDPOINT = "https://sfucyzoivepphqwimatg.supabase.co/functions/v1/wptt-request";
+  var STORE_KEY = "hyundai";
+  // ==========================================================
 
   // ===================== CONFIGURATION =====================
-  // Where requests are emailed is set in the EMAIL DELIVERY block at the top of this script.
+  // Where requests are emailed is set server-side in the Supabase function (see EMAIL DELIVERY above).
 
   // Pricing source: "Hyundai" tab, Kia Recommended Services Menu (August 2026).
   // vehicle: "ICE" (gas/hybrid) | "BOTH"     store: "Hyundai" (omit if available at both stores)
@@ -788,8 +782,8 @@
     document.getElementById("hiddenSummary").value = buildSummary();
   }
 
-  // Build the FormSubmit payload: readable field names (they become the rows of the
-  // "table" email template) plus FormSubmit's special underscore fields.
+  // Build the request fields: readable labels -> values (they become the rows of the
+  // email). Recipients/subject are decided server-side by the Supabase function.
   function buildPayload(){
     var chosen = selectedServices();
     var paid = chosen.filter(function(s){ return !s.isGift; });
@@ -802,14 +796,6 @@
     var name = val("custName"), email = val("custEmail");
 
     var p = {};
-    p["_subject"]  = (TEST_MODE ? "[TEST] " : "") + "We Pay The Tax - " + STORE + " service request - " + name;
-    if (FORM_CC) p["_cc"] = FORM_CC;
-    p["_template"] = "table";
-    p["_captcha"]  = "false";
-    if (email) p["_replyto"] = email;
-    p["_url"]      = location.href;
-
-    if (TEST_MODE) p["Test Mode"] = "TEST SUBMISSION - sent only to " + TEST_RECIPIENT;
     p["Dealership"]      = STORE;
     p["Customer Name"]   = name;
     p["Customer Email"]  = email;
@@ -840,7 +826,6 @@
 
   var sendBtn = document.getElementById("sendBtn");
   var sendBtnHTML = sendBtn.innerHTML;
-  requestForm.setAttribute("action", FORM_ENDPOINT.replace("/ajax/", "/"));
 
   requestForm.addEventListener("submit", function(e){
     e.preventDefault();
@@ -848,22 +833,25 @@
     populateHiddenFields();
     sendBtn.disabled = true;
     sendBtn.textContent = "Sending…";
-    fetch(FORM_ENDPOINT, {
+    var fields = buildPayload();
+    fetch(REQUEST_ENDPOINT, {
       method:"POST",
       headers:{ "Content-Type":"application/json", "Accept":"application/json" },
-      body:JSON.stringify(buildPayload())
+      body:JSON.stringify({
+        store: STORE_KEY,
+        fields: fields,
+        customerName: fields["Customer Name"],
+        customerEmail: fields["Customer Email"],
+        website: document.getElementById("wpttWebsite").value
+      })
     })
       .then(function(r){
-        // FormSubmit answers {"success":"true", ...} when the email is sent, and
-        // {"success":"false","message":"..."} otherwise (e.g. form not activated yet),
-        // sometimes with HTTP 200, so success is judged from the JSON, not just r.ok.
+        // The function answers {"ok":true} when Resend accepted the email, else {"ok":false,"error":"..."}.
         return r.json().catch(function(){ return {}; }).then(function(data){
           window.__wpttLastResponse = { status:r.status, data:data };
-          if (TEST_MODE && window.console) console.log("[WPTT] FormSubmit response", r.status, data);
-          if (!r.ok || String(data.success) !== "true"){
-            var err = new Error(data.message || ("HTTP " + r.status));
-            err.fsMessage = data.message;
-            throw err;
+          if (!r.ok || data.ok !== true){
+            if (window.console) console.warn("[WPTT] send failed", r.status, data);
+            throw new Error(data.error || ("HTTP " + r.status));
           }
         });
       })
@@ -874,7 +862,6 @@
       })
       .catch(function(err){
         var msg = "Sorry, we couldn't send your request. Please try again, or use \"Copy request details instead\".";
-        if (TEST_MODE && err && err.message) msg += " [Test mode - FormSubmit said: " + err.message + "]";
         showError(msg);
       })
       .then(function(){
