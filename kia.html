@@ -459,6 +459,8 @@
   // Where requests are emailed is set server-side in the Supabase function (see EMAIL DELIVERY above).
 
   // Pricing source: "Hyundai" tab, Kia Recommended Services Menu (August 2026).
+  // Oct 2026 service-manager update: coolant, hybrid inverter coolant, manual trans, transfer case,
+  // rear diff, and undercoating split into Full Body / Under Body options.
   // vehicle: "ICE" (gas/hybrid) | "BOTH"     store: "Hyundai" (omit if available at both stores)
   // sub: optional small note shown under the service name in the checklist.
   var CATEGORIES = [
@@ -478,8 +480,8 @@
       name: "Fluids",
       services: [
         { id:"brakefluid",   name:"Brake Fluid Replacement",     price:189.95, vehicle:"BOTH", sub:"$129.95 when booked with a Tire Swap" },
-        { id:"coolant",      name:"Engine Coolant Service",      price:199.95, vehicle:"ICE"  },
-        { id:"hybridcoolant",name:"Hybrid Inverter Coolant Service", price:249.95, vehicle:"ICE", sub:"Hybrid models" }
+        { id:"coolant",      name:"Engine Coolant Service",      price:219.95, vehicle:"ICE"  },
+        { id:"hybridcoolant",name:"Hybrid Inverter Coolant Service", price:449.95, vehicle:"ICE", sub:"Hybrid models" }
       ]
     },
     {
@@ -487,9 +489,9 @@
       note: "Pricing is for conventional automatic transmissions — dual-clutch/CVT may vary and will be confirmed at booking.",
       services: [
         { id:"autotrans",    name:"Automatic Transmission Service", price:399.95, vehicle:"ICE" },
-        { id:"mantrans",     name:"Manual Transmission Service",    price:149.95, vehicle:"ICE" },
-        { id:"transfercase", name:"Transfer Case Service",          price:149.95, vehicle:"ICE", sub:"AWD models" },
-        { id:"reardiff",     name:"Rear Differential Service",      price:149.95, vehicle:"ICE", sub:"AWD models" },
+        { id:"mantrans",     name:"Manual Transmission Service",    price:159.95, vehicle:"ICE" },
+        { id:"transfercase", name:"Transfer Case Service",          price:159.95, vehicle:"ICE", sub:"AWD models" },
+        { id:"reardiff",     name:"Rear Differential Service",      price:159.95, vehicle:"ICE", sub:"AWD models" },
         { id:"driveline",    name:"Driveline Bundle",               price:599.95, vehicle:"ICE", sub:"ATF + transfer case + rear diff, AWD" },
         { id:"hybridbelt",   name:"Hybrid Gear Belt",               price:299.95, vehicle:"ICE", sub:"Hybrid models" }
       ]
@@ -507,7 +509,10 @@
     {
       name: "Inspection, Care & More",
       services: [
-        { id:"undercoating", name:"Undercoating (Dripless Oil)", price:199.95, vehicle:"ICE" },
+        // Undercoating: two options rotated annually so the upper body isn't overdone.
+        // Same "group" = mutually exclusive (checking one unchecks the other).
+        { id:"undercoatfull",  name:"Undercoating — Full Body",  price:229.95, vehicle:"ICE", group:"undercoating", sub:"Dripless oil · choose one (alternate yearly)" },
+        { id:"undercoatunder", name:"Undercoating — Under Body", price:149.95, vehicle:"ICE", group:"undercoating", sub:"Dripless oil, underside only · choose one" },
         { id:"battery",      name:"Battery Service",             price: 49.95, vehicle:"BOTH" },
         { id:"brakeservice", name:"Brake Service (per axle)",    price:169.95, vehicle:"BOTH" },
         { id:"hvac",         name:"HVAC Cleaning Service",       price:249.95, vehicle:"BOTH" },
@@ -608,7 +613,14 @@
     svcListEl.querySelectorAll('input[type=checkbox]').forEach(function(cb){
       cb.addEventListener("change", function(){
         var id = cb.getAttribute("data-id");
-        if (cb.checked) state.selected[id] = true; else delete state.selected[id];
+        if (cb.checked){
+          state.selected[id] = true;
+          // Options sharing a "group" (e.g. the two undercoating choices) are mutually exclusive
+          var svc = SERVICES.filter(function(s){ return s.id === id; })[0];
+          if (svc && svc.group){
+            SERVICES.forEach(function(s){ if (s.group === svc.group && s.id !== id) delete state.selected[s.id]; });
+          }
+        } else delete state.selected[id];
         renderServiceList();
         updateReadout();
       });
