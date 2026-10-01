@@ -249,6 +249,7 @@
     flex-shrink:0; white-space:nowrap;
   }
   .svc-row.gift{ border-color:var(--savings); background:var(--savings-glow); }
+  .svc-row .svc-thumb{ width:36px; height:47px; object-fit:cover; border-radius:6px; flex-shrink:0; display:block; background:#111; }
   .svc-row.gift .svc-price{ color:var(--savings); font-size:12.5px; text-transform:uppercase; letter-spacing:0.03em; }
   .svc-row.gift.locked{ border-color:var(--line); background:var(--bg); cursor:not-allowed; opacity:0.72; }
   .svc-row.gift.locked input{ cursor:not-allowed; }
@@ -568,7 +569,8 @@
         { id:"hvac",         name:"HVAC Cleaning Service",       price:249.95, vehicle:"BOTH" },
         { id:"mvsafety",     name:"Motor Vehicle Safety Inspection", price:299.95, vehicle:"BOTH" },
         { id:"safesound",    name:"Safe & Sound Inspection",     price:139.95, vehicle:"BOTH", sub:"Like a provincial safety, no cert issued" },
-        { id:"gift",         name:"Free Gift",                   price: 22.00, vehicle:"BOTH", store:"Hyundai", isGift:true }
+        { id:"gift",         name:"Free Gift",                   price: 22.00, vehicle:"BOTH", store:"Hyundai", isGift:true,
+          sub:"Hyundai thermos + 2 cups ($22 value)", img:"https://buddmathieson.github.io/we-pay-the-tax/email-assets/thermos-set.jpg", imgAlt:"Free Hyundai thermos set" }
       ]
     }
   ];
@@ -643,6 +645,7 @@
         var sub = locked ? "Unlocks with " + fmt(MIN_SPEND) + " or more in services" : s.sub;
         row.innerHTML =
           '<input type="checkbox" data-id="' + s.id + '" ' + (state.selected[s.id] ? "checked" : "") + (locked ? " disabled" : "") + '>' +
+          (s.img ? '<img class="svc-thumb" src="' + s.img + '" alt="' + (s.imgAlt || "") + '" width="36" height="47" loading="lazy">' : '') +
           '<span class="svc-text">' +
             '<span class="svc-name">' + s.name + (s.isGift ? "" : "") + '</span>' +
             (sub ? '<span class="svc-sub">' + sub + '</span>' : '') +
