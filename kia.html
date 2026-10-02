@@ -48,7 +48,17 @@
     display:flex; align-items:center; justify-content:space-between;
     padding:10px 20px; gap:14px; flex-wrap:wrap;
   }
-  .sticky-brand{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; min-width:0; }
+  .sticky-brand{ display:flex; align-items:center; gap:10px; flex-wrap:nowrap; min-width:0; flex:1 1 0; }
+  .sticky-brand .sticky-badge, .sticky-brand .sticky-deadline{ flex-shrink:0; }
+  .sticky-brand .sticky-strike{ flex:1 1 auto; min-width:0; }
+  .sticky-deadline{
+    font-size:11px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase; white-space:nowrap;
+    color:#FFFFFF; border:1px solid rgba(255,255,255,0.65); padding:3px 8px; border-radius:999px; line-height:1.2;
+  }
+  @media (max-width:640px){
+    .sticky-brand{ flex-direction:column; align-items:flex-start; gap:3px; flex:0 0 auto; }
+    .sticky-deadline{ border:0; padding:0 0 0 2px; font-size:10.5px; }
+  }
   .sticky-badge{
     font-family:'Barlow Condensed',sans-serif;
     font-size:clamp(14px, 3.6vw, 17px); font-weight:700; letter-spacing:0.05em; text-transform:uppercase;
@@ -161,6 +171,22 @@
     .hero-save{ flex:1 1 100%; flex-direction:row; flex-wrap:wrap; align-items:baseline; column-gap:10px; padding:8px 14px 9px; }
     .hs-label{ font-size:14px; }
     .hs-note{ flex-basis:100%; margin-top:1px; }
+  }
+  /* ---------- Deadline strip under the headline ---------- */
+  .deadline-strip{
+    display:inline-flex; align-items:center; gap:10px; max-width:100%;
+    background:#FFFFFF; color:#05141F; border-radius:8px; padding:7px 14px 7px 11px; margin:0 0 14px;
+    box-shadow:0 2px 0 rgba(0,0,0,0.22);
+  }
+  .deadline-strip svg{ width:20px; height:20px; flex-shrink:0; }
+  .dl-text{ display:flex; flex-wrap:wrap; align-items:baseline; column-gap:8px; row-gap:1px; min-width:0; }
+  .dl-main{ font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:19px; line-height:1.1; letter-spacing:0.03em; text-transform:uppercase; white-space:nowrap; }
+  .dl-sep{ font-weight:700; opacity:0.6; }
+  .dl-sub{ font-size:13.5px; font-weight:600; line-height:1.3; }
+  @media (max-width:560px){
+    .deadline-strip{ display:flex; padding:7px 12px 8px 10px; }
+    .dl-sep{ display:none; }
+    .dl-sub{ flex-basis:100%; font-size:12.5px; }
   }
   .header h1{
     font-family:'Barlow Condensed', sans-serif;
@@ -342,6 +368,7 @@
   <div class="sticky-bar-inner">
     <div class="sticky-brand">
       <span class="sticky-badge">We Pay The Tax</span>
+      <span class="sticky-deadline">Ends Oct 31</span>
       <span class="sticky-strike" id="stickyStrike">Select services to see your price</span>
     </div>
     <div class="sticky-numbers">
@@ -378,6 +405,7 @@
         <span class="hs-note" id="heroSaveNote">Spend $250.00 or more and we pay the 13% HST</span>
       </div>
     </div>
+    <div class="deadline-strip" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5M9 2h6M12 2v3"/></svg><span class="dl-text"><strong class="dl-main">Offer ends October 31</strong><span class="dl-sep" aria-hidden="true">&middot;</span><span class="dl-sub">Service must be completed by Oct 31, 2026</span></span></div>
     <h1>Build Your Service Package</h1>
     <p>Spend $250 or more on the services below and we cover the Ontario HST, so the price you see is the price you pay.</p>
   </div>
